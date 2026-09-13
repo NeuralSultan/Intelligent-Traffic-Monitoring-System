@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Datasets
+data/raw/
+data/processed/
+
+# Model weights
+models/*.pt
+models/*.pth
+models/*.onnx
+
+# Training outputs
+runs/
+outputs/
+results/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment / secrets
+.env
+
+# Logs
+*.log
