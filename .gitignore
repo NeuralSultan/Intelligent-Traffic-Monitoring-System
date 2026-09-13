@@ -31,3 +31,8 @@ results/
 
 # Logs
 *.log
+
+# YOLO model weights
+*.pt
+*.pth
+*.onnx

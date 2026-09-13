@@ -1,0 +1,15 @@
+{
+    "video_width": 1920,
+    "video_height": 1080,
+    "left_side": {
+        "expected_direction": "DOWN",
+        "confidence": 1.0,
+        "tracks_used": 50
+    },
+    "right_side": {
+        "expected_direction": "UP",
+        "confidence": 1.0,
+        "tracks_used": 65
+    },
+    "calibration_valid": true
+}
