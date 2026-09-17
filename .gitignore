@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.py[cod]
+
+# Virtual environments
 .venv/
 venv/
 env/
@@ -9,18 +11,15 @@ env/
 .ipynb_checkpoints/
 
 # Datasets
-data/raw/
-data/processed/
+data/
 
-# Model weights
-models/*.pt
-models/*.pth
-models/*.onnx
-
-# Training outputs
-runs/
+# Generated outputs
 outputs/
+runs/
 results/
+
+# Tests
+tests/
 
 # IDE
 .vscode/
@@ -32,7 +31,10 @@ results/
 # Logs
 *.log
 
-# YOLO model weights
-*.pt
-*.pth
-*.onnx
+# Temporary files
+*.tmp
+*.cache
+
+# Base training models
+yolo11n.pt
+yolo26n.pt

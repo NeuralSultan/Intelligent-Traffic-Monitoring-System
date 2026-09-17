@@ -23,15 +23,12 @@ class VehicleCounter:
         )
 
         if vehicle_classes is None:
-            vehicle_classes = {
-                0: "car",
-                1: "bus",
-                2: "truck",
-                3: "motorcycle",
-                4: "bicycle",
-            }
+            raise ValueError(
+                "vehicle_classes must be provided."
+            )
 
         self.vehicle_classes = vehicle_classes
+
 
         # Track ID -> previous center Y
         self.previous_positions = {}

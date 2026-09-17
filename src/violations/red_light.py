@@ -1,169 +1,215 @@
-from collections import defaultdict
+from typing import Optional
+
+from src.core.base_detector import BaseViolationDetector
+from src.core.schemas import VehicleState, ViolationEvent
 
 
-class RedLightDetector:
+class RedLightDetector(BaseViolationDetector):
     """
-    Detects red-light violations from:
+    Detects red-light violations using:
 
-    1. Traffic-light state
-    2. Vehicle tracking
-    3. Stop-line crossing
+        Traffic-light state
+        +
+        Vehicle tracking
+        +
+        Stop-line crossing
 
-    This module does NOT run YOLO.
-    It receives already processed track information
-    from the main pipeline.
+    The detector does not run YOLO.
     """
 
     def __init__(
         self,
-        frame_width: int,
-        frame_height: int,
-        confirmation_frames: int = 5,
+        stop_line,
+        traffic_light_state_provider,
     ):
-        self.frame_width = frame_width
-        self.frame_height = frame_height
+        if (
+            stop_line is None
+            or len(stop_line) != 2
+        ):
+            raise ValueError(
+                "stop_line must contain two points."
+            )
 
-        self.confirmation_frames = (
-            confirmation_frames
+        self.stop_line = (
+            tuple(stop_line[0]),
+            tuple(stop_line[1]),
         )
 
-        # ----------------------------------------------------
-        # Stop line
-        # ----------------------------------------------------
-        #
-        # Starter configuration:
-        # horizontal line at 70% of frame height.
-        #
-        # We will make this configurable later.
-        #
-
-        self.stop_line_y = int(
-            frame_height * 0.70
+        self.traffic_light_state_provider = (
+            traffic_light_state_provider
         )
 
-        # Track ID -> previous Y position
+        # Track ID -> previous bottom-center position
         self.previous_positions = {}
 
-        # Track ID -> consecutive red-light violation frames
-        self.violation_streak = defaultdict(int)
-
-        # Confirmed violation IDs
+        # Track IDs that already produced
+        # a red-light violation.
         self.confirmed_violations = set()
 
-    def update(
+    def _cross_product(
         self,
-        track_id: int,
-        center_y: float,
-        traffic_light_state: str,
+        a,
+        b,
+        c,
+    ):
+        return (
+            (b[0] - a[0])
+            * (c[1] - a[1])
+            - (b[1] - a[1])
+            * (c[0] - a[0])
+        )
+
+    def _crossed_line(
+        self,
+        previous_point,
+        current_point,
     ):
         """
-        Update one tracked vehicle.
-
-        traffic_light_state must be one of:
-            RED
-            YELLOW
-            GREEN
-            UNKNOWN
+        Check whether the vehicle crossed
+        the stop line between two frames.
         """
 
-        track_id = int(track_id)
-        center_y = float(center_y)
+        a, b = self.stop_line
 
-        state = traffic_light_state.upper()
+        previous_side = self._cross_product(
+            a,
+            b,
+            previous_point,
+        )
 
-        if state not in {
+        current_side = self._cross_product(
+            a,
+            b,
+            current_point,
+        )
+
+        return (
+            (
+                previous_side > 0
+                and current_side < 0
+            )
+            or (
+                previous_side < 0
+                and current_side > 0
+            )
+            or previous_side == 0
+            or current_side == 0
+        )
+
+    def process(
+        self,
+        vehicle: VehicleState,
+        frame,
+        frame_number: int,
+        timestamp: float,
+    ) -> Optional[ViolationEvent]:
+
+        track_id = int(vehicle.track_id)
+
+        # --------------------------------------------------
+        # Get current traffic-light state
+        # --------------------------------------------------
+
+        traffic_light_state = (
+            self.traffic_light_state_provider()
+        )
+
+        if traffic_light_state is None:
+            traffic_light_state = "UNKNOWN"
+
+        traffic_light_state = (
+            traffic_light_state.upper()
+        )
+
+        if traffic_light_state not in {
             "RED",
-            "YELLOW",
             "GREEN",
             "UNKNOWN",
         }:
-            state = "UNKNOWN"
+            traffic_light_state = "UNKNOWN"
 
-        previous_y = self.previous_positions.get(
-            track_id
+        # --------------------------------------------------
+        # Vehicle contact point with the road
+        # --------------------------------------------------
+
+        x1, y1, x2, y2 = vehicle.bbox
+
+        current_point = (
+            (float(x1) + float(x2)) / 2.0,
+            float(y2),
+        )
+
+        previous_point = (
+            self.previous_positions.get(
+                track_id
+            )
         )
 
         crossed_stop_line = False
 
-        if previous_y is not None:
+        if previous_point is not None:
+            crossed_stop_line = self._crossed_line(
+                previous_point,
+                current_point,
+            )
 
-            # Vehicle moving downward across line
-            if (
-                previous_y < self.stop_line_y
-                and center_y >= self.stop_line_y
-            ):
-                crossed_stop_line = True
+        self.previous_positions[
+            track_id
+        ] = current_point
 
-        self.previous_positions[track_id] = center_y
+        # --------------------------------------------------
+        # Red-light violation
+        # --------------------------------------------------
 
-        # ----------------------------------------------------
-        # Red-light condition
-        # ----------------------------------------------------
-
-        is_red_violation = (
-            state == "RED"
+        if (
+            traffic_light_state == "RED"
             and crossed_stop_line
-        )
-
-        if is_red_violation:
-
-            self.violation_streak[track_id] += 1
-
-        else:
-
-            self.violation_streak[track_id] = 0
-
-        # ----------------------------------------------------
-        # Confirm violation
-        # ----------------------------------------------------
-
-        confirmed = (
-            self.violation_streak[track_id]
-            >= self.confirmation_frames
-        )
-
-        if confirmed:
+            and track_id not in self.confirmed_violations
+        ):
 
             self.confirmed_violations.add(
                 track_id
             )
 
-        return {
-            "track_id": track_id,
-            "traffic_light_state": state,
-            "crossed_stop_line": crossed_stop_line,
-            "red_light_violation": is_red_violation,
-            "streak": self.violation_streak[track_id],
-            "confirmed": confirmed,
-        }
+            return ViolationEvent(
+                violation_type="red_light",
+                vehicle_id=track_id,
+                frame_number=frame_number,
+                timestamp=timestamp,
+                class_name=vehicle.class_name,
+                severity="high",
+                confidence=vehicle.confidence,
+                details={
+                    "traffic_light_state": (
+                        traffic_light_state
+                    ),
+                    "stop_line": [
+                        list(self.stop_line[0]),
+                        list(self.stop_line[1]),
+                    ],
+                    "bbox": list(vehicle.bbox),
+                },
+            )
+
+        return None
 
     def get_violations(self):
-        """
-        Return confirmed red-light violations.
-        """
-
         return set(
             self.confirmed_violations
         )
 
-    def get_stop_line_y(self):
-        """
-        Return stop-line position.
-        """
+    def get_stop_line(self):
+        return self.stop_line
 
-        return self.stop_line_y
-
-    def remove_track(self, track_id: int):
-        """
-        Remove finished track from memory.
-        """
-
+    def remove_track(
+        self,
+        track_id: int,
+    ):
         self.previous_positions.pop(
-            track_id,
+            int(track_id),
             None,
         )
 
-        self.violation_streak.pop(
-            track_id,
-            None,
-        )
+    def reset(self):
+        self.previous_positions.clear()
+        self.confirmed_violations.clear()
