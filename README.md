@@ -89,6 +89,24 @@ Intelligent Traffic Monitoring & Violation Detection System/
 
 The Streamlit interface is currently under development and will be added to the `app/` directory.
 
+## Demo
+
+### Vehicle Tracking
+
+![Vehicle Tracking](docs/images/tracking.gif)
+
+### Vehicle Counting
+
+![Vehicle Counting](docs/images/counting.gif)
+
+### Speed-Limit Sign Detection
+
+![Speed-Limit Sign Detection](docs/images/speed_sign.jpg)
+
+### Red-Light Violation Detection
+
+![Red-Light Violation Detection](docs/images/red_light_violation.jpg)
+
 ## Technologies
 
 * Python
