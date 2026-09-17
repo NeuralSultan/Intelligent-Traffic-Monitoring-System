@@ -8,14 +8,20 @@ import yaml
 # Configuration
 # ============================================================
 
-SOURCE_DIR = Path(
-    r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-    r"\data\raw\traffic-vehicle-detection"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+SOURCE_DIR = (
+    PROJECT_ROOT
+    / "data"
+    / "raw"
+    / "traffic-vehicle-detection"
 )
 
-OUTPUT_DIR = Path(
-    r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-    r"\data\processed\traffic-vehicle-detection"
+OUTPUT_DIR = (
+    PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "traffic-vehicle-detection"
 )
 
 VALIDATION_RATIO = 0.20

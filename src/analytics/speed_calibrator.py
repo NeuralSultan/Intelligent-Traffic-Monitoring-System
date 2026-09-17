@@ -403,27 +403,3 @@ class SpeedCalibrator:
                 break
 
         cv2.destroyAllWindows()
-
-
-if __name__ == "__main__":
-
-    VIDEO_PATH = (
-        r"D:\Intelligent Traffic Monitoring & "
-        r"Violation Detection System"
-        r"\data\raw\test_videos\traffic_test.mp4"
-    )
-
-    OUTPUT_PATH = (
-        r"D:\Intelligent Traffic Monitoring & "
-        r"Violation Detection System"
-        r"\configs\calibrations\camera_01_speed.json"
-    )
-
-    calibrator = SpeedCalibrator(
-        video_path=VIDEO_PATH,
-        output_path=OUTPUT_PATH,
-        scene_id="camera_01",
-    )
-
-    calibrator.run()
-

@@ -7,7 +7,14 @@ import yaml
 # Configuration
 # =========================
 
-DATASET_DIR = Path(r"D:\Intelligent Traffic Monitoring & Violation Detection System\data\raw\traffic-vehicle-detection")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+DATASET_DIR = (
+    PROJECT_ROOT
+    / "data"
+    / "raw"
+    / "traffic-vehicle-detection"
+)
 YAML_PATH = DATASET_DIR / "data.yaml"
 
 

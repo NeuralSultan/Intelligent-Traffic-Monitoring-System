@@ -3,18 +3,21 @@ from collections import Counter
 import yaml
 
 
-# ============================================================
-# Dataset paths
-# ============================================================
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
 
 DATASETS = {
-    "road_traffic": Path(
-        r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-        r"\data\raw\road-traffic"
+    "road_traffic": (
+        PROJECT_ROOT
+        / "data"
+        / "raw"
+        / "road-traffic"
     ),
-    "traffic_vehicle": Path(
-        r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-        r"\data\processed\traffic-vehicle-detection"
+    "traffic_vehicle": (
+        PROJECT_ROOT
+        / "data"
+        / "processed"
+        / "traffic-vehicle-detection"
     ),
 }
 

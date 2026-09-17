@@ -7,9 +7,7 @@ import yaml
 # Project paths
 # ============================================================
 
-PROJECT_ROOT = Path(
-    r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 ROAD_TRAFFIC = PROJECT_ROOT / "data" / "raw" / "road-traffic"
 
@@ -399,7 +397,7 @@ process_dataset(
 # ============================================================
 
 unified_yaml = {
-    "path": str(OUTPUT_DIR).replace("\\", "/"),
+    "path": str(OUTPUT_DIR.relative_to(PROJECT_ROOT)).replace("\\", "/"),
     "train": "train/images",
     "val": "valid/images",
     "test": "test/images",

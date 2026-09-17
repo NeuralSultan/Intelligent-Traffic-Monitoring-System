@@ -1,9 +1,7 @@
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(
-    r"D:\Intelligent Traffic Monitoring & Violation Detection System"
-)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 # ============================================================
